@@ -183,28 +183,28 @@ class OCTANIST_BTN_Setup_Texture_Environment(Operator):
     filter_glob = bpy.props.StringProperty(default="*.hdr;*.png;*.jpeg;*.jpg;*.exr", options={'HIDDEN'})
     
     def execute(self, context):
-         if self.filepath != '':
-             print('SELECTED : '+self.filepath)
-             #CREATE WORLD TEXTURE
-             tex = create_world_texture('OCEnv')
-             #CREATE NODES
-             node_image = add_node(tex, 'ShaderNodeOctImageTex', [-300,0])
-             node_sph_projection = add_node(tex, 'ShaderNodeOctSphericalProjection', [-600,0])
-             node_ro_transform = add_node(tex, 'ShaderNodeOct3DTransform', [-900,0])
-             node_output = add_node(tex, 'TextureNodeOutput', [0,0])
-             #MODIFY NODES PROPERTIES
-             tex.use_fake_user = True
-             node_image.image = bpy.data.images.load(self.filepath)
-             node_image.image.use_fake_user = True
-             node_image.inputs[0].default_value = 1.0
-             #LINK NODES
-             link_nodes(tex, node_ro_transform, 0, node_sph_projection, 0)
-             link_nodes(tex, node_sph_projection, 0, node_image, 4)
-             link_nodes(tex, node_image, 0, node_output, 0)
-             #SET TEXTURE AS ENVIRONMENT TEXTURE
-             bpy.context.scene.world.octane.env_type = '0'
-             bpy.context.scene.world.octane.env_texture = tex.name
-         return {'FINISHED'}
+        if self.filepath != '':
+            print(f'SELECTED : {self.filepath}')
+            #CREATE WORLD TEXTURE
+            tex = create_world_texture('OCEnv')
+            #CREATE NODES
+            node_image = add_node(tex, 'ShaderNodeOctImageTex', [-300,0])
+            node_sph_projection = add_node(tex, 'ShaderNodeOctSphericalProjection', [-600,0])
+            node_ro_transform = add_node(tex, 'ShaderNodeOct3DTransform', [-900,0])
+            node_output = add_node(tex, 'TextureNodeOutput', [0,0])
+            #MODIFY NODES PROPERTIES
+            tex.use_fake_user = True
+            node_image.image = bpy.data.images.load(self.filepath)
+            node_image.image.use_fake_user = True
+            node_image.inputs[0].default_value = 1.0
+            #LINK NODES
+            link_nodes(tex, node_ro_transform, 0, node_sph_projection, 0)
+            link_nodes(tex, node_sph_projection, 0, node_image, 4)
+            link_nodes(tex, node_image, 0, node_output, 0)
+            #SET TEXTURE AS ENVIRONMENT TEXTURE
+            bpy.context.scene.world.octane.env_type = '0'
+            bpy.context.scene.world.octane.env_texture = tex.name
+        return {'FINISHED'}
     
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -237,8 +237,7 @@ class OCTANIST_BTN_Reset_Texture_Environment(Operator):
     bl_label = 'Reset Texture Environment'
 
     def execute(self, context):
-        env_tex_name = context.scene.world.octane.env_texture
-        if env_tex_name:
+        if env_tex_name := context.scene.world.octane.env_texture:
             env_tex = bpy.data.textures[env_tex_name]
             env_tex.rot_x=0
             env_tex.rot_y=0
@@ -257,8 +256,7 @@ class OCTANIST_BTN_Remove_Texture_Environment(Operator):
     bl_label = 'Remove Texture Environment'
     
     def execute(self, context):
-        env_tex_name = context.scene.world.octane.env_texture
-        if env_tex_name:
+        if env_tex_name := context.scene.world.octane.env_texture:
             context.scene.world.octane.env_texture = ""
             bpy.data.textures.remove(bpy.data.textures[env_tex_name])
             context.scene.world.octane.env_type = '1'
@@ -270,8 +268,7 @@ class OCTANIST_BTN_Reset_Texture_Visible_Environment(Operator):
     bl_label = 'Reset Visible Texture Environment'
     
     def execute(self, context):
-        vis_env_tex_name = context.scene.world.octane.env_vis_texture
-        if vis_env_tex_name:
+        if vis_env_tex_name := context.scene.world.octane.env_vis_texture:
             vis_env_tex = bpy.data.textures[vis_env_tex_name]
             vis_env_tex.vis_env_color=(1,1,1,1)
             context.scene.world.octane.env_vis_power = 1
@@ -282,8 +279,7 @@ class OCTANIST_BTN_Remove_Texture_Visible_Environment(Operator):
     bl_label = 'Remove Visible Texture Environment'
     
     def execute(self, context):
-        vis_env_tex_name = context.scene.world.octane.env_vis_texture
-        if vis_env_tex_name:
+        if vis_env_tex_name := context.scene.world.octane.env_vis_texture:
             context.scene.world.octane.env_vis_texture = ""
             bpy.data.textures.remove(bpy.data.textures[vis_env_tex_name])
             context.scene.world.octane.use_vis_env = False
@@ -348,14 +344,14 @@ class OCTANIST_BTN_Add_Default_Cam(Operator):
     
     def execute(self, context):
         bpy.ops.object.camera_add(view_align=True, rotation=(3.1415927410125732/2,0,0))
-        
+
         context.scene.octane.hdr_tonemap_render_enable = self.camera_imager
-        
+
         if self.camera_imager:
             context.scene.display_settings.display_device = 'None'
         else:
             context.scene.display_settings.display_device = 'sRGB'
-        
+
         return {'FINISHED'}
     def draw(self, context):
         layout = self.layout
@@ -392,21 +388,21 @@ class OCTANIST_BTN_Add_360_Cam(Operator):
     def execute(self, context):
         context.scene.render.resolution_x = self.res_x
         context.scene.render.resolution_y = self.res_y
-        
+
         bpy.ops.object.camera_add(view_align=True, rotation=(3.1415927410125732/2,0,0))
         cam = context.active_object
         cam.data.lens_unit = 'FOV'
         cam.data.angle = 1.5708
         cam.data.type = 'PANO'
         cam.data.cycles.panorama_type = 'EQUIRECTANGULAR'
-        
+
         context.scene.octane.hdr_tonemap_render_enable = self.camera_imager
-        
+
         if self.camera_imager:
             context.scene.display_settings.display_device = 'None'
         else:
             context.scene.display_settings.display_device = 'sRGB'
-            
+
         return {'FINISHED'}
     
     def draw(self, context):
@@ -442,7 +438,7 @@ class OCTANIST_PANEL_Environment(Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        
+
         if scene.render.engine == 'octane':
             #Button | Scene
             col = layout.column(align=True)
@@ -451,13 +447,12 @@ class OCTANIST_PANEL_Environment(Panel):
             col = layout.column(align=True)
             col.label('Display Device')
             col.prop(scene.display_settings, 'display_device', text='')
-            
+
             #Button | Setup Texture Environment & Reset Texture Environment
             layout.label('Environment')
             col = layout.column(align=True)
             col.operator('octanist.setup_tex_env', text='Texture Environment', icon='IMAGE_COL')
-            env_tex_name = bpy.context.scene.world.octane.env_texture
-            if env_tex_name:
+            if env_tex_name := bpy.context.scene.world.octane.env_texture:
                 env_tex = bpy.data.textures[env_tex_name]
                 col.prop(scene.world.octane, 'env_power')
                 col.prop(env_tex, 'rot_x')
@@ -472,25 +467,24 @@ class OCTANIST_PANEL_Environment(Panel):
                 row = col.row(align=True)
                 row.operator('octanist.reset_tex_env', text='Reset', icon='FILE_REFRESH')
                 row.operator('octanist.remove_tex_env', text='Remove', icon='PANEL_CLOSE')
-            
+
             #Button | Setup Solid Color Visible Environment 
             col = layout.column(align=True)
             col.operator('octanist.setup_tex_vis_env', text='Solid Color VisEnvironment', icon='COLOR')
             vis_env_tex_name = scene.world.octane.env_vis_texture
-            if scene.world.octane.use_vis_env == True:
-                if vis_env_tex_name:
-                    vis_env_tex = bpy.data.textures[vis_env_tex_name]
-                    col.prop(vis_env_tex,'vis_env_color','')
-                    col.prop(scene.world.octane, 'env_vis_power')
-                    row = col.row(align=True)
-                    row.operator('octanist.reset_tex_vis_env', text='Reset', icon='FILE_REFRESH')
-                    row.operator('octanist.remove_tex_vis_env', text='Remove', icon='PANEL_CLOSE')
-                    
+            if scene.world.octane.use_vis_env == True and vis_env_tex_name:
+                vis_env_tex = bpy.data.textures[vis_env_tex_name]
+                col.prop(vis_env_tex,'vis_env_color','')
+                col.prop(scene.world.octane, 'env_vis_power')
+                row = col.row(align=True)
+                row.operator('octanist.reset_tex_vis_env', text='Reset', icon='FILE_REFRESH')
+                row.operator('octanist.remove_tex_vis_env', text='Remove', icon='PANEL_CLOSE')
+
             #Button | Lights
             layout.label('Lights')
             row = layout.row(align=True)
             row.operator('octanist.add_pointlight', text='Point Light', icon='LAMP_POINT')
-            
+
             #Button | Cameras
             layout.label('Cameras')
             col = layout.column(align=True)
@@ -723,7 +717,7 @@ class OCTANIST_BTN_Assign_FIREMat(Operator):
         #ASSIGN NODES
         for ob in bpy.context.selected_objects:
             assign_material(ob, mat)
-            
+
         return {'FINISHED'}
         
     def invoke(self, context, event):
@@ -741,9 +735,9 @@ class OCTANIST_PANEL_Materials(Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        
+
         if scene.render.engine == 'octane':
-            
+
             #Button | Basic Shaders
             layout.label('Basic Shaders')
             col = layout.column(align=True)
@@ -752,14 +746,14 @@ class OCTANIST_PANEL_Materials(Panel):
             col.operator('octanist.metal_mat', text='Metal Shader', icon='MATERIAL_DATA')
             col.operator('octanist.specular_mat', text='Specular Shader', icon='MATERIAL_DATA')
             col.operator('octanist.toon_mat', text='Toon Shader', icon='MATERIAL_DATA')
-            
+
             #Button | Featured Materials
             layout.label('Featured Materials')
             col = layout.column(align=True)
             col.operator('octanist.rgb_emission_fmat', text='RGB Emission', icon='MATERIAL_DATA')
             col.operator('octanist.fire_fmat', text='Fire Material [Domain]', icon='MATERIAL_DATA')
             #col.operator('octanist.pbr_fmat', text='Metallic PBR Material', icon='MATERIAL_DATA')
-        
+
         else:
             layout.label(text="Octane Render Only")
         
